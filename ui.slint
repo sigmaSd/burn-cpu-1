@@ -16,12 +16,10 @@ export component Window inherits Window {
             horizontal-alignment: center;
         }
 
-        for cpu in cpu_data: HorizontalLayout {
-            Button {
-                text: cpu.active ? "Stop CPU" + cpu.number : "Start CPU" + cpu.number;
-                clicked => {
-                    cpu.active = toggleCPU(cpu.number);
-                }
+        for cpu in cpu_data: Button {
+            text: cpu.active ? "Stop CPU" + cpu.number : "Start CPU" + cpu.number;
+            clicked => {
+                cpu.active = toggleCPU(cpu.number);
             }
         }
     }
