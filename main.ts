@@ -1,5 +1,28 @@
 import * as slint from "npm:slint-ui@1.7.1";
 
+function tmp_dir(): string | null {
+  switch (Deno.build.os) {
+    case "linux": {
+      return "/tmp";
+    }
+    case "darwin":
+      return Deno.env.get("TMPDIR") ?? null;
+    case "windows":
+      return Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? null;
+  }
+  return null;
+}
+
+// TODO: embed the svg so I don't need this hack
+await fetch(import.meta.resolve("./fire.svg")).then((r) =>
+  r.body?.pipeTo(
+    Deno.openSync((tmp_dir() ?? "/tmp") + "/burncpu-fire.svg", {
+      write: true,
+      create: true,
+    }).writable,
+  )
+);
+
 // Import our Slint UI
 const ui = slint.loadFile("./ui.slint");
 
