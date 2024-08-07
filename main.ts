@@ -14,9 +14,10 @@ function tmp_dir(): string | null {
 }
 
 // TODO: embed the svg so I don't need this hack
+const imageUrlPath = (tmp_dir() ?? "/tmp") + "/burncpu-fire.svg";
 await fetch(import.meta.resolve("./fire.svg")).then((r) =>
   r.body?.pipeTo(
-    Deno.openSync((tmp_dir() ?? "/tmp") + "/burncpu-fire.svg", {
+    Deno.openSync(imageUrlPath, {
       write: true,
       create: true,
     }).writable,
@@ -24,7 +25,12 @@ await fetch(import.meta.resolve("./fire.svg")).then((r) =>
 );
 
 // Import our Slint UI
-const ui = slint.loadFile("./ui.slint");
+// TODO: same hack part 2
+const uiData = await fetch(import.meta.resolve("./ui.slint"))
+  .then((r) => r.text())
+  .then((r) => r.replace("IMAGE_URL_PATH", imageUrlPath));
+
+const ui = slint.loadSource(uiData, "main.js");
 
 const window = new ui.Window();
 
