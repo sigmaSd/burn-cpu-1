@@ -1,25 +1,105 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+import { VerticalBox } from "std-widgets.slint";
 
 struct CPUData {
     number: int,
     active: bool,
 }
 
+component FireSVG inherits Image {
+    source: @image-url("fire.svg");
+    width: 100%;
+    height: 100%;
+    image-fit: contain;
+}
+
+component CustomButton inherits Rectangle {
+    callback clicked;
+    in property <string> text;
+    in property <bool> active;
+
+    height: 40px;
+    width: 120px;
+    background: active ? #ff4500 : #4a4a4a;
+    border-radius: 4px;
+
+    animate background { duration: 150ms; }
+
+    Text {
+        color: white;
+        text: parent.text;
+        font-size: 16px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    TouchArea {
+        clicked => {
+            parent.clicked();
+        }
+    }
+}
+
 export component Window inherits Window {
-    in-out property <[CPUData]> cpu_data: [];
+    title: "BurnCPU";
+    in-out property <[CPUData]> cpu-data: [];
+    in property <int> active-cpus: 0;
     callback toggleCPU(int) -> bool;
 
+    background: #f0f0f0;
+    width: 400px;
+    height: 600px;
+
     VerticalBox {
+        alignment: center;
+        spacing: 20px;
+
         Text {
-            text: "Burn CPU";
-            font-size: 24px;
             horizontal-alignment: center;
+            text: "BurnCPU";
+            font-size: 32px;
+            font-weight: 600;
+            color: #ff4500;
         }
 
-        for cpu in cpu_data: Button {
-            text: cpu.active ? "Stop CPU" + cpu.number : "Start CPU" + cpu.number;
-            clicked => {
-                cpu.active = toggleCPU(cpu.number);
+        Rectangle {
+            width: 400px;
+            height: 160px;
+            background: transparent;
+
+            FireSVG {
+                x: (root.width - parent.width);
+                horizontal-alignment: center;
+                height: 150px + 10px * root.active-cpus;
+                animate height {
+                    duration: 300ms;
+                    easing: ease-in-out;
+                }
+            }
+        }
+
+        Rectangle {
+            height: 5px;
+            // Add some space between fire and buttons
+        }
+
+        for cpu[i] in cpu-data: HorizontalLayout {
+            alignment: center;
+            spacing: 10px;
+
+            Rectangle {
+                width: cpu.active ? 10px : 5px;
+                height: cpu.active ? 20px : 10px;
+                background: cpu.active ? #ff4500 : #808080;
+                animate width, height, background { duration: 150ms; }
+            }
+
+            CustomButton {
+                text: cpu.active ? "Stop CPU " + (i + 1) : "Start CPU " + (i + 1);
+                active: cpu.active;
+                clicked => {
+                    cpu.active = toggleCPU(cpu.number);
+                }
             }
         }
     }

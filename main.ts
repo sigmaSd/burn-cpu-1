@@ -44,15 +44,26 @@ const cpuData = Array.from({ length: numCPUs }, (_, i) => ({
 // Set the CPU data in the UI
 window.cpu_data = cpuData;
 
+// Function to update active CPU count
+function updateActiveCPUs() {
+  const activeCPUs = cpuData.filter((cpu) => cpu.active).length;
+  window.active_cpus = activeCPUs;
+}
+
+// Initial update of active CPUs
+updateActiveCPUs();
+
 // Connect UI signals to worker creation and termination
 window.toggleCPU = (cpuNumber: number) => {
   if (workers[cpuNumber]) {
     stopCPUWorker(cpuNumber);
-    return false; // Return false to indicate the CPU is now inactive
+    cpuData[cpuNumber - 1].active = false;
   } else {
     startCPUWorker(cpuNumber);
-    return true; // Return true to indicate the CPU is now active
+    cpuData[cpuNumber - 1].active = true;
   }
+  updateActiveCPUs();
+  return cpuData[cpuNumber - 1].active;
 };
 
 window.run();
