@@ -1,0 +1,28 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+struct CPUData {
+    number: int,
+    active: bool,
+}
+
+export component Window inherits Window {
+    in-out property <[CPUData]> cpu_data: [];
+    callback toggleCPU(int) -> bool;
+
+    VerticalBox {
+        Text {
+            text: "Burn CPU";
+            font-size: 24px;
+            horizontal-alignment: center;
+        }
+
+        for cpu in cpu_data: HorizontalLayout {
+            Button {
+                text: cpu.active ? "Stop CPU" + cpu.number : "Start CPU" + cpu.number;
+                clicked => {
+                    cpu.active = toggleCPU(cpu.number);
+                }
+            }
+        }
+    }
+}
