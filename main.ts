@@ -34,6 +34,11 @@ function stopCPUWorker(cpuNumber: number) {
     console.log(`No active worker for CPU${cpuNumber}`);
   }
 }
+function stopAllWorkers(workers: { [key: number]: Worker }) {
+  Object.keys(workers).forEach((cpuNumber) => {
+    stopCPUWorker(parseInt(cpuNumber));
+  });
+}
 
 // Generate CPU data for the UI
 const cpuData = Array.from({ length: numCPUs }, (_, i) => ({
@@ -66,4 +71,5 @@ window.toggleCPU = (cpuNumber: number) => {
   return cpuData[cpuNumber - 1].active;
 };
 
-window.run();
+await window.run();
+stopAllWorkers(workers);
