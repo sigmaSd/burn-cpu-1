@@ -64,17 +64,22 @@ export component Window inherits Window {
 
         Rectangle {
             width: 400px;
-            height: 160px;
+            height: root.active-cpus > 0 ? 160px : 0;
             background: transparent;
 
             FireSVG {
                 x: (root.width - parent.width);
                 horizontal-alignment: center;
-                height: 150px + 10px * root.active-cpus;
+                height: root.active-cpus > 0 ? 150px + 10px * root.active-cpus : 0;
                 animate height {
                     duration: 300ms;
                     easing: ease-in-out;
                 }
+            }
+
+            animate height {
+                duration: 300ms;
+                easing: ease-in-out;
             }
         }
 
@@ -95,7 +100,7 @@ export component Window inherits Window {
             }
 
             CustomButton {
-                text: cpu.active ? "Stop CPU " + (i + 1) : "Start CPU " + (i + 1);
+                text: cpu.active ? "Stop Core " + (i + 1) : "Start Core " + (i + 1);
                 active: cpu.active;
                 clicked => {
                     cpu.active = toggleCPU(cpu.number);
