@@ -1,5 +1,6 @@
 # Burn Cpu
-![image](https://github.com/user-attachments/assets/c76ba226-ebca-46c3-9034-f3f8204efae2)
+
+https://github.com/user-attachments/assets/0300b067-b68a-4085-b071-9d221f728e2f
 
 ```
 deno run --allow-write=/tmp --allow-read --allow-ffi --allow-sys --reload https://raw.githubusercontent.com/sigmaSd/burn-cpu-1/master/main.ts
