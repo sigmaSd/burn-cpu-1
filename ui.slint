@@ -5,6 +5,11 @@ struct CPUData {
     active: bool,
 }
 
+struct GPUData {
+    number: int,
+    active: bool,
+}
+
 component FireSVG inherits Image {
     source: @image-url("IMAGE_URL_PATH");
     width: 100%;
@@ -43,8 +48,12 @@ component CustomButton inherits Rectangle {
 export component Window inherits Window {
     title: "BurnCPU";
     in-out property <[CPUData]> cpu-data: [];
+    in-out property <[GPUData]> gpu-data: [];
     in property <int> active-cpus: 0;
+    in property <int> active-gpus: 0;
+    in-out property <int> gpu-complexity: 50; // Default to 50% complexity
     callback toggleCPU(int) -> bool;
+    callback toggleGPU(int, int) -> bool; // Using complexity parameter
 
     background: #f0f0f0;
     width: 400px;
@@ -104,6 +113,50 @@ export component Window inherits Window {
                 active: cpu.active;
                 clicked => {
                     cpu.active = toggleCPU(cpu.number);
+                }
+            }
+        }
+        
+        // Separator between CPU and GPU sections
+        if (gpu-data.length > 0): VerticalLayout {
+            Rectangle {
+                height: 1px;
+                background: #cccccc;
+                width: 80%;
+            }
+            
+            Rectangle {
+                height: 20px; // Spacing
+            }
+            
+            Text {
+                text: "GPU Stress Test";
+                font-size: 18px;
+                font-weight: 500;
+                horizontal-alignment: center;
+                color: #333333;
+            }
+        }
+        
+        // No GPU complexity controls here anymore
+        
+        for gpu[i] in gpu-data: HorizontalLayout {
+            alignment: center;
+            spacing: 10px;
+
+            Rectangle {
+                width: gpu.active ? 10px : 5px;
+                height: gpu.active ? 20px : 10px;
+                background: gpu.active ? #00aaff : #808080;
+                animate width, height, background { duration: 150ms; }
+            }
+
+            CustomButton {
+                text: gpu.active ? "Stop GPU " + (i + 1) : "Start GPU " + (i + 1);
+                active: gpu.active;
+                background: gpu.active ? #00aaff : #4a4a4a;
+                clicked => {
+                    gpu.active = toggleGPU(gpu.number, root.gpu-complexity);
                 }
             }
         }
