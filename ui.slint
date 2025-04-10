@@ -10,24 +10,25 @@ struct GPUData {
     active: bool,
 }
 
-component FireSVG inherits Image {
-    source: @image-url("IMAGE_URL_PATH");
-    width: 100%;
-    height: 100%;
-    image-fit: contain;
-}
+
 
 component CustomButton inherits Rectangle {
     callback clicked;
     in property <string> text;
     in property <bool> active;
+    in property <brush> active-color: #ff4500;
+    // Default to red (CPU color)
 
     height: 40px;
-    width: 120px;
-    background: active ? #ff4500 : #4a4a4a;
-    border-radius: 4px;
+    width: 140px;
+    background: active ? active-color : #4a4a4a;
+    border-radius: 8px;
+    drop-shadow-offset-x: active ? 2px : 1px;
+    drop-shadow-offset-y: active ? 2px : 1px;
+    drop-shadow-color: active ? active-color.darker(20%) : #2a2a2a;
+    drop-shadow-blur: 3px;
 
-    animate background { duration: 150ms; }
+    animate background, drop-shadow-offset-x, drop-shadow-offset-y { duration: 150ms; }
 
     Text {
         color: white;
@@ -51,36 +52,75 @@ export component Window inherits Window {
     in-out property <[GPUData]> gpu-data: [];
     in property <int> active-cpus: 0;
     in property <int> active-gpus: 0;
-    in-out property <int> gpu-complexity: 50; // Default to 50% complexity
     callback toggleCPU(int) -> bool;
-    callback toggleGPU(int, int) -> bool; // Using complexity parameter
+    callback toggleGPU(int) -> bool;
+    // No complexity parameter
 
     background: #f0f0f0;
-    width: 400px;
-    height: 600px;
+    width: 700px;
+    min-height: 400px;
+    preferred-height: 650px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: parent.background;
+        clip: true;
+        // Ensure content doesn't overflow
+    }
 
     VerticalBox {
         alignment: center;
         spacing: 20px;
 
-        Text {
-            horizontal-alignment: center;
-            text: "BurnCPU";
-            font-size: 32px;
-            font-weight: 600;
-            color: #ff4500;
+        VerticalLayout {
+            alignment: center;
+            spacing: 5px;
+
+            Text {
+                horizontal-alignment: center;
+                text: "BurnCPU";
+                font-size: 32px;
+                font-weight: 700;
+                color: #ff4500;
+            }
+
+            Text {
+                horizontal-alignment: center;
+                text: "CPU & GPU Stress Test";
+                font-size: 16px;
+                font-weight: 500;
+                color: #444444;
+            }
         }
 
+        // Fire display area
         Rectangle {
-            width: 400px;
-            height: root.active-cpus > 0 ? 160px : 0;
+            width: parent.width;
+            height: (root.active-cpus > 0 || root.active-gpus > 0) ? 160px : 0;
             background: transparent;
 
-            FireSVG {
-                x: (root.width - parent.width);
-                horizontal-alignment: center;
-                height: root.active-cpus > 0 ? 150px + 10px * root.active-cpus : 0;
-                animate height {
+            // CPU Fire (red)
+            Image {
+                x: root.active-gpus > 0 ? (root.width / 2 - 100px) : (root.width / 2 - 50px);
+                width: 100px;
+                height: root.active-cpus > 0 ? 150px + 10px * root.active-cpus : 0px;
+                source: @image-url("CPU_FIRE_PATH");
+                image-fit: contain;
+                animate height, x {
+                    duration: 300ms;
+                    easing: ease-in-out;
+                }
+            }
+
+            // GPU Fire (blue)
+            Image {
+                x: root.active-cpus > 0 ? (root.width / 2 + 100px) : (root.width / 2 - 50px);
+                width: 100px;
+                height: root.active-gpus > 0 ? 150px + 10px * root.active-gpus : 0px;
+                source: @image-url("GPU_FIRE_PATH");
+                image-fit: contain;
+                animate height, x {
                     duration: 300ms;
                     easing: ease-in-out;
                 }
@@ -97,26 +137,38 @@ export component Window inherits Window {
             // Add some space between fire and buttons
         }
 
-        for cpu[i] in cpu-data: HorizontalLayout {
-            alignment: center;
-            spacing: 10px;
+        // CPU buttons using a flow layout
+        VerticalLayout {
+            spacing: 8px;
+            padding: 5px;
 
-            Rectangle {
-                width: cpu.active ? 10px : 5px;
-                height: cpu.active ? 20px : 10px;
-                background: cpu.active ? #ff4500 : #808080;
-                animate width, height, background { duration: 150ms; }
-            }
+            HorizontalLayout {
+                alignment: center;
+                spacing: 10px;
 
-            CustomButton {
-                text: cpu.active ? "Stop Core " + (i + 1) : "Start Core " + (i + 1);
-                active: cpu.active;
-                clicked => {
-                    cpu.active = toggleCPU(cpu.number);
+                for cpu[i] in cpu-data: HorizontalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    Rectangle {
+                        width: cpu.active ? 10px : 5px;
+                        height: cpu.active ? 20px : 10px;
+                        background: cpu.active ? #ff4500 : #808080;
+                        animate width, height, background { duration: 150ms; }
+                    }
+
+                    CustomButton {
+                        text: cpu.active ? "Stop Core " + (i + 1) : "Start Core " + (i + 1);
+                        active: cpu.active;
+                        active-color: #ff4500;
+                        // Red for CPU
+                        clicked => {
+                            cpu.active = toggleCPU(cpu.number);
+                        }
+                    }
                 }
             }
         }
-        
+
         // Separator between CPU and GPU sections
         if (gpu-data.length > 0): VerticalLayout {
             Rectangle {
@@ -124,39 +176,49 @@ export component Window inherits Window {
                 background: #cccccc;
                 width: 80%;
             }
-            
+
             Rectangle {
-                height: 20px; // Spacing
+                height: 20px;
+                // Spacing
             }
-            
+
             Text {
-                text: "GPU Stress Test";
+                text: "GPU Controls";
                 font-size: 18px;
                 font-weight: 500;
                 horizontal-alignment: center;
-                color: #333333;
+                color: #00aaff;
             }
         }
-        
-        // No GPU complexity controls here anymore
-        
-        for gpu[i] in gpu-data: HorizontalLayout {
-            alignment: center;
-            spacing: 10px;
 
-            Rectangle {
-                width: gpu.active ? 10px : 5px;
-                height: gpu.active ? 20px : 10px;
-                background: gpu.active ? #00aaff : #808080;
-                animate width, height, background { duration: 150ms; }
-            }
+        // GPU buttons using a flow layout
+        VerticalLayout {
+            spacing: 8px;
+            padding: 5px;
 
-            CustomButton {
-                text: gpu.active ? "Stop GPU " + (i + 1) : "Start GPU " + (i + 1);
-                active: gpu.active;
-                background: gpu.active ? #00aaff : #4a4a4a;
-                clicked => {
-                    gpu.active = toggleGPU(gpu.number, root.gpu-complexity);
+            HorizontalLayout {
+                alignment: center;
+                spacing: 10px;
+
+                for gpu[i] in gpu-data: HorizontalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    Rectangle {
+                        width: gpu.active ? 10px : 5px;
+                        height: gpu.active ? 20px : 10px;
+                        background: gpu.active ? #00aaff : #808080;
+                        animate width, height, background { duration: 150ms; }
+                    }
+
+                    CustomButton {
+                        text: gpu.active ? "Stop GPU " + (i + 1) : "Start GPU " + (i + 1);
+                        active: gpu.active;
+                        active-color: #00aaff;
+                        // Blue for GPU
+                        clicked => {
+                            gpu.active = toggleGPU(gpu.number);
+                        }
+                    }
                 }
             }
         }

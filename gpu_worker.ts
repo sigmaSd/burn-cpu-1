@@ -5,7 +5,7 @@ import {
   WindowBuilder,
 } from "jsr:@divy/sdl2";
 
-const WIDTH = 800;
+const WIDTH = 1200;
 const HEIGHT = 600;
 
 // Flag to handle worker termination
@@ -22,29 +22,19 @@ self.onmessage = (e: MessageEvent) => {
 };
 
 async function run(e: MessageEvent) {
-  const { gpu, complexity = 50 } = e.data;
+  const { gpu, complexity: _complexity = 50 } = e.data; // Rename to _complexity to indicate intentionally unused
   // Convert percentage to actual values
   const _complexityFactor = 0.01;
-  console.log(`GPU${gpu} worker started with complexity ${complexity}%`);
 
   using sdlWin = new WindowBuilder("GPU Stress Test", WIDTH, HEIGHT)
     .vulkan()
-    // .hidden() // Keep the window hidden to not disturb the user
     .build();
 
-  //   // Get the canvas from the window
+  // Get the canvas from the window
   const canvas = sdlWin.canvas();
 
   // Create a texture creator for generating textures
   const textureCreator = canvas.textureCreator();
-
-  // Create a target texture that we can render to
-  const _renderTarget = textureCreator.createTexture(
-    PixelFormat.RGBA8888,
-    TextureAccess.Target,
-    WIDTH,
-    HEIGHT,
-  );
 
   // Pre-generate some random rectangles to improve performance
   const randomRects = [];
@@ -94,10 +84,6 @@ async function run(e: MessageEvent) {
     }
     batchRects.push(rects);
   }
-
-  console.log(
-    `Using ${numTextures} textures, ${numBatches} batches of ${batchSize} rectangles`,
-  );
 
   // Main event loop with rendering
   for await (const event of sdlWin.events(false)) {

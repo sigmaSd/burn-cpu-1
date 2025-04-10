@@ -40,7 +40,6 @@ function startCPUWorker(
   cpuNumber: number,
 ) {
   if (workers[cpuNumber]) {
-    console.log(`CPU${cpuNumber} worker already running`);
     return;
   }
   const worker = new Worker(
@@ -49,7 +48,6 @@ function startCPUWorker(
   );
   worker.postMessage({ cpu: cpuNumber });
   workers[cpuNumber] = worker;
-  console.log(`Started CPU${cpuNumber} worker`);
 }
 
 // Function to stop a CPU worker
@@ -60,13 +58,10 @@ function stopCPUWorker(
   if (workers[cpuNumber]) {
     workers[cpuNumber].terminate();
     delete workers[cpuNumber];
-    console.log(`Stopped CPU${cpuNumber} worker`);
-  } else {
-    console.log(`No active worker for CPU${cpuNumber}`);
   }
 }
 
-function stopAllWorkers(workers: { [key: number]: Worker }) {
+function stopAllCPUWorkers(workers: { [key: number]: Worker }) {
   Object.keys(workers).forEach((cpuNumber) => {
     stopCPUWorker(workers, parseInt(cpuNumber));
   });
@@ -78,30 +73,26 @@ function startGPUWorker(
   gpuData: { number: number; active: boolean }[],
   gpuWorkers: { [key: number]: Worker },
   gpuNumber: number,
-  complexity: number = 100,
 ) {
   if (gpuWorkers[gpuNumber]) {
-    console.log(`GPU${gpuNumber} worker already running`);
     return;
   }
   const worker = new Worker(
     import.meta.resolve("./gpu_worker.ts"),
     { type: "module" },
   );
-  worker.postMessage({ gpu: gpuNumber, complexity: complexity });
+  // Use low complexity to reduce performance impact
+  worker.postMessage({ gpu: gpuNumber, complexity: 10 });
   worker.onmessage = (event) => {
     if (event.data.status === "finished") {
       gpuData[gpuNumber - 1].active = false;
       updateActiveGPUs(sdlWin, gpuData);
       sdlWin.gpu_data = gpuData;
-      console.log(gpuData, gpuNumber, gpuWorkers);
       gpuWorkers[gpuNumber].terminate();
       delete gpuWorkers[gpuNumber];
-      console.log(`Stopped GPU${gpuNumber} worker`);
     }
   };
   gpuWorkers[gpuNumber] = worker;
-  console.log(`Started GPU${gpuNumber} worker with complexity ${complexity}%`);
 }
 
 // Function to stop a GPU worker
@@ -111,9 +102,6 @@ function stopGPUWorker(
 ) {
   if (gpuWorkers[gpuNumber]) {
     gpuWorkers[gpuNumber].postMessage({ command: "stop" });
-    console.log(`Stopping GPU${gpuNumber} worker`);
-  } else {
-    console.log(`No active worker for GPU${gpuNumber}`);
   }
 }
 
@@ -136,23 +124,37 @@ function updateActiveGPUs(window: Window, gpuData: GPUData[]) {
 }
 
 if (import.meta.main) {
-  // TODO: embed the svg so I don't need this hack
-  const imageUrlPath = (tmpDir() ?? "/tmp") + "/burncpu-fire.svg";
-  await fetch(import.meta.resolve("./fire.svg"))
+  // Copy fire SVG files to temp directory
+  const cpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-red.svg";
+  const gpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-green.svg";
+
+  // Copy CPU fire
+  await fetch(import.meta.resolve("./fire-red.svg"))
     .then((r) =>
       r.body?.pipeTo(
-        Deno.openSync(imageUrlPath, {
+        Deno.openSync(cpuFirePath, {
           write: true,
           create: true,
         }).writable,
       )
     );
 
-  // Import our Slint UI
-  // TODO: same hack part 2
+  // Copy GPU fire
+  await fetch(import.meta.resolve("./fire-green.svg"))
+    .then((r) =>
+      r.body?.pipeTo(
+        Deno.openSync(gpuFirePath, {
+          write: true,
+          create: true,
+        }).writable,
+      )
+    );
+
+  // Import our Slint UI and replace fire paths
   const uiData = await fetch(import.meta.resolve("./ui.slint"))
     .then((r) => r.text())
-    .then((r) => r.replace("IMAGE_URL_PATH", imageUrlPath));
+    .then((r) => r.replace("CPU_FIRE_PATH", cpuFirePath))
+    .then((r) => r.replace("GPU_FIRE_PATH", gpuFirePath));
 
   const ui = slint.loadSource(uiData, "main.js");
 
@@ -202,19 +204,24 @@ if (import.meta.main) {
   };
 
   // Connect UI signals to GPU worker creation and termination
-  window.toggleGPU = (gpuNumber: number, complexity: number) => {
+  window.toggleGPU = (gpuNumber: number) => {
     if (gpuWorkers[gpuNumber]) {
       stopGPUWorker(gpuWorkers, gpuNumber);
       gpuData[gpuNumber - 1].active = false;
     } else {
-      startGPUWorker(window, gpuData, gpuWorkers, gpuNumber, complexity);
+      startGPUWorker(window, gpuData, gpuWorkers, gpuNumber);
       gpuData[gpuNumber - 1].active = true;
     }
     updateActiveGPUs(window, gpuData);
     return gpuData[gpuNumber - 1].active;
   };
 
+  Deno.addSignalListener("SIGINT", () => {
+    stopAllCPUWorkers(cpuWorkers);
+    stopAllGPUWorkers(gpuWorkers);
+    Deno.exit(0);
+  });
   await window.run();
-  stopAllWorkers(cpuWorkers);
+  stopAllCPUWorkers(cpuWorkers);
   stopAllGPUWorkers(gpuWorkers);
 }
