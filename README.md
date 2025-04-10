@@ -1,6 +1,6 @@
 # Burn Cpu
 
-https://github.com/user-attachments/assets/0300b067-b68a-4085-b071-9d221f728e2f
+https://github.com/user-attachments/assets/10b11215-fbda-446b-982f-c01f567e75ca
 
 ## Usage
 
