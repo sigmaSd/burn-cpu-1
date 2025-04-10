@@ -97,17 +97,17 @@ export component Window inherits Window {
         // Fire display area
         Rectangle {
             width: parent.width;
-            height: (root.active-cpus > 0 || root.active-gpus > 0) ? 160px : 0;
+            height: (root.active-cpus > 0 || root.active-gpus > 0) ? 220px : 0;
             background: transparent;
 
             // CPU Fire (red)
             Image {
                 x: root.active-gpus > 0 ? (root.width / 2 - 100px) : (root.width / 2 - 50px);
-                width: 100px;
-                height: root.active-cpus > 0 ? 150px + 10px * root.active-cpus : 0px;
+                width: 100px + (root.active-cpus > 0 ? 15px * (root.active-cpus - 1) : 0px);
+                height: root.active-cpus > 0 ? 150px + 25px * root.active-cpus : 0px;
                 source: @image-url("CPU_FIRE_PATH");
                 image-fit: contain;
-                animate height, x {
+                animate height, width, x {
                     duration: 300ms;
                     easing: ease-in-out;
                 }
@@ -116,11 +116,11 @@ export component Window inherits Window {
             // GPU Fire (blue)
             Image {
                 x: root.active-cpus > 0 ? (root.width / 2 + 100px) : (root.width / 2 - 50px);
-                width: 100px;
-                height: root.active-gpus > 0 ? 150px + 10px * root.active-gpus : 0px;
+                width: 100px + (root.active-gpus > 0 ? 15px * (root.active-gpus - 1) : 0px);
+                height: root.active-gpus > 0 ? 150px + 25px * root.active-gpus : 0px;
                 source: @image-url("GPU_FIRE_PATH");
                 image-fit: contain;
-                animate height, x {
+                animate height, width, x {
                     duration: 300ms;
                     easing: ease-in-out;
                 }
