@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import {
   EventType,
   PixelFormat,
@@ -11,7 +12,6 @@ const HEIGHT = 600;
 // Flag to handle worker termination
 let shouldRun = true;
 
-// @ts-ignore - This is a worker
 self.onmessage = (e: MessageEvent) => {
   // Handle termination message
   if (e.data.command === "stop") {
