@@ -1,4 +1,7 @@
 import * as slint from "npm:slint-ui@1.10.0";
+import fireRedSvg from "./fire-red.svg" with { type: "bytes" };
+import fireGreenSvg from "./fire-green.svg" with { type: "bytes" };
+import slintUi from "./ui.slint" with { type: "text" };
 
 interface Window {
   cpu_data: CPUData[];
@@ -126,37 +129,17 @@ function updateActiveGPUs(window: Window, gpuData: GPUData[]) {
 if (import.meta.main) {
   // Copy fire SVG files to temp directory
   const cpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-red.svg";
+  Deno.writeFileSync(cpuFirePath, fireRedSvg);
   const gpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-green.svg";
+  Deno.writeFileSync(gpuFirePath, fireGreenSvg);
 
-  // Copy CPU fire
-  await fetch(import.meta.resolve("./fire-red.svg"))
-    .then((r) =>
-      r.body?.pipeTo(
-        Deno.openSync(cpuFirePath, {
-          write: true,
-          create: true,
-        }).writable,
-      )
-    );
-
-  // Copy GPU fire
-  await fetch(import.meta.resolve("./fire-green.svg"))
-    .then((r) =>
-      r.body?.pipeTo(
-        Deno.openSync(gpuFirePath, {
-          write: true,
-          create: true,
-        }).writable,
-      )
-    );
-
-  // Import our Slint UI and replace fire paths
-  const uiData = await fetch(import.meta.resolve("./ui.slint"))
-    .then((r) => r.text())
-    .then((r) => r.replace("CPU_FIRE_PATH", cpuFirePath))
-    .then((r) => r.replace("GPU_FIRE_PATH", gpuFirePath));
-
-  const ui = slint.loadSource(uiData, "main.js");
+  const ui = slint.loadSource(
+    slintUi.replace("CPU_FIRE_PATH", cpuFirePath).replace(
+      "GPU_FIRE_PATH",
+      gpuFirePath,
+    ),
+    "main.js",
+  );
 
   // deno-lint-ignore no-explicit-any
   const window = new (ui as any).Window() as Window;
