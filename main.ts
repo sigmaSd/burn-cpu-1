@@ -1,6 +1,10 @@
 import * as slint from "npm:slint-ui@1.12.1";
-import fireRedRgba from "./fire-red-small.rgba" with { type: "bytes" };
-import fireGreenRgba from "./fire-green-small.rgba" with { type: "bytes" };
+import fireRedRgba from "./assets/fire-red-100-transparent.rgba" with {
+  type: "bytes",
+};
+import fireGreenRgba from "./assets/fire-green-100-transparent.rgba" with {
+  type: "bytes",
+};
 import slintUi from "./ui.slint" with { type: "text" };
 import { Buffer } from "node:buffer";
 
@@ -125,16 +129,16 @@ function updateActiveGPUs(window: Window, gpuData: GPUData[]) {
 if (import.meta.main) {
   // Create image objects with RGBA data
   const cpuFireImage = {
-    width: 50,
-    height: 50,
+    width: 100,
+    height: 100,
     get data() {
       return Buffer.from(fireRedRgba);
     },
   };
 
   const gpuFireImage = {
-    width: 50,
-    height: 50,
+    width: 100,
+    height: 100,
     get data() {
       return Buffer.from(fireGreenRgba);
     },
