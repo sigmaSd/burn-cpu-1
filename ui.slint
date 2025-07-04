@@ -52,6 +52,8 @@ export component Window inherits Window {
     in-out property <[GPUData]> gpu-data: [];
     in property <int> active-cpus: 0;
     in property <int> active-gpus: 0;
+    in property <image> cpu-fire-image;
+    in property <image> gpu-fire-image;
     callback toggleCPU(int) -> bool;
     callback toggleGPU(int) -> bool;
     // No complexity parameter
@@ -105,7 +107,7 @@ export component Window inherits Window {
                 x: root.active-gpus > 0 ? (root.width / 2 - 100px) : (root.width / 2 - 50px);
                 width: 100px + (root.active-cpus > 0 ? 15px * (root.active-cpus - 1) : 0px);
                 height: root.active-cpus > 0 ? 150px + 25px * root.active-cpus : 0px;
-                source: @image-url("CPU_FIRE_PATH");
+                source: root.cpu-fire-image;
                 image-fit: contain;
                 animate height, width, x {
                     duration: 300ms;
@@ -118,7 +120,7 @@ export component Window inherits Window {
                 x: root.active-cpus > 0 ? (root.width / 2 + 100px) : (root.width / 2 - 50px);
                 width: 100px + (root.active-gpus > 0 ? 15px * (root.active-gpus - 1) : 0px);
                 height: root.active-gpus > 0 ? 150px + 25px * root.active-gpus : 0px;
-                source: @image-url("GPU_FIRE_PATH");
+                source: root.gpu-fire-image;
                 image-fit: contain;
                 animate height, width, x {
                     duration: 300ms;

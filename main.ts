@@ -1,6 +1,6 @@
 import * as slint from "npm:slint-ui@1.10.0";
-import fireRedSvg from "./fire-red.svg" with { type: "bytes" };
-import fireGreenSvg from "./fire-green.svg" with { type: "bytes" };
+import fireRedRgba from "./fire-red-small.rgba" with { type: "bytes" };
+import fireGreenRgba from "./fire-green-small.rgba" with { type: "bytes" };
 import slintUi from "./ui.slint" with { type: "text" };
 
 interface Window {
@@ -22,19 +22,6 @@ interface CPUData {
 interface GPUData {
   number: number;
   active: boolean;
-}
-
-function tmpDir(): string | null {
-  switch (Deno.build.os) {
-    case "linux": {
-      return "/tmp";
-    }
-    case "darwin":
-      return Deno.env.get("TMPDIR") ?? null;
-    case "windows":
-      return Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? null;
-  }
-  return null;
 }
 
 // Function to start a CPU-intensive worker
@@ -127,22 +114,31 @@ function updateActiveGPUs(window: Window, gpuData: GPUData[]) {
 }
 
 if (import.meta.main) {
-  // Copy fire SVG files to temp directory
-  const cpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-red.svg";
-  Deno.writeFileSync(cpuFirePath, fireRedSvg);
-  const gpuFirePath = (tmpDir() ?? "/tmp") + "/burncpu-fire-green.svg";
-  Deno.writeFileSync(gpuFirePath, fireGreenSvg);
+  // Create image objects with RGBA data
+  const cpuFireImage = {
+    width: 50,
+    height: 50,
+    get data() {
+      return Buffer.from(fireRedRgba);
+    },
+  };
 
-  const ui = slint.loadSource(
-    slintUi.replace("CPU_FIRE_PATH", cpuFirePath).replace(
-      "GPU_FIRE_PATH",
-      gpuFirePath,
-    ),
-    "main.js",
-  );
+  const gpuFireImage = {
+    width: 50,
+    height: 50,
+    get data() {
+      return Buffer.from(fireGreenRgba);
+    },
+  };
+
+  const ui = slint.loadSource(slintUi, "main.js");
 
   // deno-lint-ignore no-explicit-any
   const window = new (ui as any).Window() as Window;
+
+  // Set PNG images directly on window properties
+  window.cpu_fire_image = cpuFireImage;
+  window.gpu_fire_image = gpuFireImage;
 
   // Get the number of logical CPUs
   const numCPUs = navigator.hardwareConcurrency || 4; // Fallback to 4 if not available
