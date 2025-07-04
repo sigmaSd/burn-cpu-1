@@ -2,8 +2,17 @@ import * as slint from "npm:slint-ui@1.10.0";
 import fireRedRgba from "./fire-red-small.rgba" with { type: "bytes" };
 import fireGreenRgba from "./fire-green-small.rgba" with { type: "bytes" };
 import slintUi from "./ui.slint" with { type: "text" };
+import { Buffer } from "node:buffer";
+
+interface SlintImage {
+  width: number;
+  height: number;
+  data: Uint8Array;
+}
 
 interface Window {
+  cpu_fire_image: SlintImage;
+  gpu_fire_image: SlintImage;
   cpu_data: CPUData[];
   gpu_data: GPUData[];
   active_cpus: number;
