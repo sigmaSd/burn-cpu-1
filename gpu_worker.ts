@@ -4,7 +4,7 @@ import {
   PixelFormat,
   TextureAccess,
   WindowBuilder,
-} from "jsr:@divy/sdl2";
+} from "jsr:@divy/sdl2@0.14.0";
 
 const WIDTH = 1200;
 const HEIGHT = 600;
