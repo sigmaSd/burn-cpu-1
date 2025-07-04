@@ -1,4 +1,4 @@
-import * as slint from "npm:slint-ui@1.10.0";
+import * as slint from "npm:slint-ui@1.12.1";
 import fireRedRgba from "./fire-red-small.rgba" with { type: "bytes" };
 import fireGreenRgba from "./fire-green-small.rgba" with { type: "bytes" };
 import slintUi from "./ui.slint" with { type: "text" };
